@@ -8,26 +8,33 @@ from os.path import expanduser
 from shutil import copyfile
 import sys
 import codecs
+from os.path import expanduser
 sys.stdout = codecs.getwriter('utf8')(sys.stdout)
 sys.stderr = codecs.getwriter('utf8')(sys.stderr)
 
-def convert_to_apng(src_path, dest_path):
-	FNULL = open(os.devnull, 'w')
+def convert_to_apng(src_path, dest_path, is_verbose=False):
+	if is_verbose:
+		print "Start to export...", src_path, "=>" ,dest_path
 
 	filter_files = lambda f: os.path.splitext(f)[1][1:].strip().lower()=='png'
 	dir_abs_path = lambda d: os.path.join(src_path,d)
 	dirs = lambda d: os.listdir(d)
+	filter_only_dirs = lambda f: os.path.isdir(dir_abs_path(f)) and not f.startswith('.')
 
-	target_dirs = filter(lambda f: os.path.isdir(f) and not f.startswith('.'), dirs(src_path))
+	target_dirs = filter(filter_only_dirs, dirs(src_path))
 	targets = [(d, dir_abs_path(d), d.split('_'), dirs(dir_abs_path(d))) for d in target_dirs]
 	targets = filter(lambda args: len(args[2])==2 and len(args[3]), targets)
+
+	FNULL = None if is_verbose else open(os.devnull, 'w')
 
 	for dirname, dirpath, scheme, files in targets:
 		packname = scheme[0]
 		frame_interval = str(int(float(scheme[1])*1000))
-		subprocess.call(['apngasm','-o',os.path.join(dest_path, (packname+'.png')),os.path.join(dirname, '*.png'),'-d',frame_interval,'-F'],stdout=FNULL, stderr=subprocess.STDOUT)
-
-	print dest_path
+		output_apng_file = os.path.join(dest_path, (packname+'.png'))
+		subprocess.call(['apngasm','-o', output_apng_file, os.path.join(dirpath, '*.png'),'-d',frame_interval,'-F'], stdout=FNULL, stderr=subprocess.STDOUT)
+		if is_verbose:
+			print output_apng_file
+	return dest_path
 
 def main():
 	parser = argparse.ArgumentParser(description='Generate all png frames to APNGs.')
@@ -48,7 +55,7 @@ def main():
 		sys.exit(1)
 
 	__dest_path__ = os.path.join(os.path.join(__src_path__,'..'), __dest_dirname__)
-	convert_to_apng(__src_path__, __dest_path__)
+	print convert_to_apng(__src_path__, __dest_path__)
 
 if __name__ == '__main__':
 	main()
