@@ -11,7 +11,7 @@ import codecs
 sys.stdout = codecs.getwriter('utf8')(sys.stdout)
 sys.stderr = codecs.getwriter('utf8')(sys.stderr)
 
-def convert(src_path, dest_path):
+def convert_to_apng(src_path, dest_path):
 	FNULL = open(os.devnull, 'w')
 
 	filter_files = lambda f: os.path.splitext(f)[1][1:].strip().lower()=='png'
@@ -48,7 +48,7 @@ def main():
 		sys.exit(1)
 
 	__dest_path__ = os.path.join(os.path.join(__src_path__,'..'), __dest_dirname__)
-	convert(__src_path__, __dest_path__)
+	convert_to_apng(__src_path__, __dest_path__)
 
 if __name__ == '__main__':
 	main()
